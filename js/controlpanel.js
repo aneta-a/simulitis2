@@ -24,10 +24,10 @@ var ControlPanel = function (city) {
 	var applyBtn = addButton("Apply", this.block, applyHandler, "", "applyButton");
 	applyBtn.panel = this;
 	
-	function canselHandler(ev) {
+	function canсelHandler(ev) {
 		ev.target.panel.hide();
 	}
-	var closeBtn = addButton("Cansel", this.block, canselHandler, "", "canselButton");
+	var closeBtn = addButton("Canсel", this.block, canсelHandler, "", "canсelButton");
 	closeBtn.panel = this;
 	
 }
