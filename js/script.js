@@ -8,6 +8,7 @@ var GlobalParams = {numParticles: 100, particleSize: 10, canvasWidth: 700, canva
 
 var cities = [];
 
+
 function pageInit() {
 	//sideMenu = document.getElementById("list");
 	mainPage = document.getElementById("main");
@@ -23,6 +24,10 @@ function pageInit() {
 	var Diycity = {};
 	copyObject(Brownburg, Diycity);
 	Diycity.name = "Diycity";
+	
+	//addButton (value, parent, clickHandler, id, className)
+	addButton("RU", mainPage, function() {changeLocale("ru");}, "ruLocaleButton", "localeButton");
+	addButton("EN", mainPage, function() {changeLocale("en");}, "enLocaleButton", "localeButton");
 	
 	addP(mainPage, getString("Title"), "h1");
 	addP(mainPage, getString("Intro"));
@@ -51,7 +56,20 @@ function setGlobalVars (qs) {
 		if (qs.hasOwnProperty(f))
 			GlobalParams[f] = qs[f];
 	City.setSilentParams(GlobalParams);
+	if (qs.hasOwnProperty("locale")) CurLocale = qs.locale.toLowerCase();
 }
+
+function changeLocale(locale){
+	if (qs.hasOwnProperty("locale") && qs.locale == locale) {
+		return;
+	} else {
+		qs.locale = locale;
+		var qs_str = createQueryString(qs);
+		window.location.assign(window.location.href.split("?")[0] + "?" + qs_str);
+	}
+		
+}
+
 
 
 function initCity(options, interactive=false) {
