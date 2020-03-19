@@ -77,10 +77,12 @@ pp.updateState = function() {
 		this.setState(Particle.STATES.RECOVERED);
 	}
 	if (this.state == Particle.STATES.CRITICAL) {
-		if (!this.city.isCareFull()) this.nonCared = false;
+		if (this.city.isThereFreePlaces()) this.nonCared = false;
 		var deathRate = this.nonCared ? this.city.params.nonCaredFatality : this.city.params.caredFatality;
 		if (Math.random() < deathRate) this.setState(Particle.STATES.DEAD);
 	}
+	if ((this.state == Particle.STATES.SICK || this.stat == Particle.STATES.HEALTHY) && this.isolated && !this.city.isIsolated())
+		this.isolate(false);
 
 }
 pp.setState = function(state){
@@ -89,7 +91,7 @@ pp.setState = function(state){
 	if (this.state == Particle.STATES.CRITICAL) {
 		this.isolate(true);
 		this.nonCared = this.city.isCareFull();
-	}
+	} 
 	this.stateTime = 0;
 }
 

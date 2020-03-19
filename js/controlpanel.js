@@ -46,19 +46,24 @@ cbp.show = function () {this.block.classList.remove("hidden");}
 cbp.createSlider = function (dataObj, block) {
 	//function setSlider (name, mn, mx, startVal, postfix="", parent = document.body, int= false) {
 	var nameString = dataObj.hasOwnProperty("nameString") ? dataObj.nameString : (dataObj.name.charAt(0).toUpperCase() + dataObj.name.slice(1));
-	var minVal = dataObj.m01 ? 0 : dataObj.min;
-	var maxVal = dataObj.m01 ? 1 : dataObj.max;
-	
-	var slider = setSlider(nameString, minVal, maxVal, this.city.params[dataObj.name], dataObj.postfix, block, !dataObj.m01);
-	slider.paramName = dataObj.name;
-	slider.panel = this;
-	
-	slider.addEventListener("change", function (ev) {
-		var sl = ev.target;
-		if (sl.panel) {
-			sl.panel.updateParam.call(sl.panel, sl.paramName, Number(sl.value));
-		}
-	})
+	if (dataObj.noSlider) {
+		var ln = addP(block, nameString + ":");
+		ln.classList.add("slider-group-description");
+	} else {
+		var minVal = dataObj.m01 ? 0 : dataObj.min;
+		var maxVal = dataObj.m01 ? 1 : dataObj.max;
+		
+		var slider = setSlider(nameString, minVal, maxVal, this.city.params[dataObj.name], dataObj.postfix, block, !dataObj.m01);
+		slider.paramName = dataObj.name;
+		slider.panel = this;
+		
+		slider.addEventListener("change", function (ev) {
+			var sl = ev.target;
+			if (sl.panel) {
+				sl.panel.updateParam.call(sl.panel, sl.paramName, Number(sl.value));
+			}
+		})
+	}
 }
 
 cbp.initSliders = function (name, data, block) {
@@ -94,15 +99,16 @@ ControlPanel.DISEASE_PARAMS = [
 	{name: "criticalStart", min: 0, max: 100, bound: {max: "recoveryDays"}, nameString: "Possible start of critical state", postfix: "days"},
 	{name: "criticalPart", m01: true, nameString: "Part of patients in critical state"},
 	{name: "criticalDays", min: 2, max: 100, nameString: "Critical state time", postfix: "days"},
-	{name: "caredDeathPart", m01: true, bound: {max: "nonCaredDeathPart"}, nameString: "Death rate with medical attention"},
-	{name: "nonCaredDeathPart", m01: true, bound: {min: "caredDeathPart"}, nameString: "Death rate without medical attention"}
+	{name: "deathPart", noSlider: true, nameString: "Death rate in critical state"},
+	{name: "caredDeathPart", m01: true, bound: {max: "nonCaredDeathPart"}, nameString: "&nbsp;&nbsp;with medical attention"},
+	{name: "nonCaredDeathPart", m01: true, bound: {min: "caredDeathPart"}, nameString: "&nbsp;&nbsp;without medical attention"}
 
 ];
 
 ControlPanel.REACTION_NAME = "Reaction";
 ControlPanel.REACTION_PARAMS = [
-	{name: "careCapacity", min: 0, max: 5000, bound: {max: "numParticles"}, nameString: "Start health care capacity"},
-	{name: "careGrowthRate", min: 0, max: 20, nameString: "health care growth rate", postfix: "per day"},
-	{name: "responsibility", m01: true}/*,
-	{name: "quarantineDays", min: 1, max: 1000, nameString: "Quarantine time", postfix: "days"}*/
+	{name: "careCapacity", min: 0, max: 1000, bound: {max: "numParticles"}, nameString: "Start health care capacity"},
+	{name: "careGrowthRate", min: 0, max: 20, nameString: "Health care growth rate", postfix: "per day"},
+	{name: "responsibility", m01: true},
+	{name: "isolationTime", min: 1, max: 200, nameString: "Isolation time", postfix: "days"}
 ];

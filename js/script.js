@@ -21,9 +21,6 @@ function pageInit() {
 	
 	//initDefaultCity();
 	
-	var Diycity = {};
-	copyObject(Brownburg, Diycity);
-	Diycity.name = "Diycity";
 	
 	//addButton (value, parent, clickHandler, id, className)
 	addButton("RU", mainPage, function() {changeLocale("ru");}, "ruLocaleButton", "localeButton");

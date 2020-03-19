@@ -43,6 +43,7 @@ function City(parent=null, options={}, interactive = false) {
 	this.statDataBlock = createDiv("statDataBlock", this.statBlock);
 
 	this.infoBlock = createDiv("currentStat", this.statDataBlock);
+	this.timeBlock = createDiv("timeStat", this.statDataBlock);
 
 	this.generalStatBlock = createDiv("generalStat", this.statDataBlock);
 
@@ -73,6 +74,11 @@ function City(parent=null, options={}, interactive = false) {
 			paramVal.setAttribute("class", "paramValue");
 			this.dataBlock.valueFields[i] = paramVal;
 	}
+	
+	this.timeInfoLine = createDiv("infoLine", this.timeBlock);
+	var timeName = addP(this.timeInfoLine, "Time: ", "span");
+	this.timeValueField = addP(this.timeInfoLine, "0", "span");
+	var timePostfix = addP(this.timeInfoLine, " days", "span");
 	
 	
 	
@@ -132,6 +138,20 @@ var cp = City.prototype;
 cp.isCareFull = function () {
 	return this.curCareCapacity < this.statData[Particle.STATES.CRITICAL];
 }
+cp.isThereFreePlaces = function () {
+	if (!this.isCareFull()) return true;
+	var count = 0;
+	for (var i = 0; i < this.particles.length; i++) {
+		if (this.particles[i].state == Particle.STATES.CRITICAL && !this.particles[i].nonCared) count++;
+		if (count > this.curCareCapacity) return false;
+	}
+	return true;
+}
+
+cp.isIsolated = function () {
+	if (!this.params.hasOwnProperty("isolationTime")) return true;
+	return this.curTime/City.TaktsPerDay < this.params.isolationTime;
+}
 
 cp.addParticle = function (particle) {
 	this.particles.push(particle);
@@ -156,7 +176,9 @@ cp.update = function() {
 		}
 		this.updateStatistics();
 		this.curTime ++;
-		this.curCareCapacity = Math.max(Math.min(this.curCareCapacity + this.params.careGrowthRate/City.TaktsPerDay, this.params.numParticles*this.params.criticalPart*1.1), this.params.careCapacity);
+		this.curCareCapacity = Math.max(Math.min(this.curCareCapacity + this.params.careGrowthRate/City.TaktsPerDay, 
+												  this.params.numParticles*this.params.criticalPart*1.1), 
+										this.params.careCapacity);
 		//console.log(this.curCareCapacity, City.TaktsPerDay, this.params.careCapacityRate);
 	}
 }
@@ -178,6 +200,9 @@ cp.updateStatistics = function() {
 	
 	if (this.statData[Particle.STATES.SICK] == 0 && this.statData[Particle.STATES.CRITICAL] == 0) this.finished = true;
 	
+	this.timeValueField.innerHTML = (this.curTime / City.TaktsPerDay).toFixed(0);
+
+	
 	var curX = this.curTime*this.plotTimeStep;
 	var curY = this.particles.length*this.numScale;//!!!!!!!!!
 	for (var i = 0; i < Particle.STATES_SORTED.length; i++) {
@@ -185,11 +210,18 @@ cp.updateStatistics = function() {
 		var height = this.statData[state]*this.numScale;
 		curY -= height;
 		this.statCtx.fillStyle = Particle.STATE_COLORS[state];
-		//console.log(this.curTime, this.plotTimeStep, curY, this.statCtx.fillStyle, height);
 		this.statCtx.fillRect(curX, curY, this.plotTimeStep, height);
 	}
 	this.statCtx.fillStyle = "magenta";
 	this.statCtx.fillRect(curX, this.statCanvas.height - this.curCareCapacity*this.numScale, this.plotTimeStep, 1);
+	if (!this.isIsolated() && !this.isolationEndMarked) {
+		this.statCtx.beginPath();
+		this.statCtx.moveTo(curX, 0);
+		this.statCtx.lineTo(curX, this.statCanvas.height);
+		this.statCtx.strokeStyle = "blue";
+		this.statCtx.stroke();
+		this.isolationEndMarked = true;
+	}
 	if (this.finished && this.started) this.updateGeneralStatistic(); 
 
 }
@@ -223,6 +255,8 @@ cp.resetStat = function () {
 
 cp.restart = function () {
 	this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	this.isolationEndMarked = false;
+
 	if (this.paramsChanged) {
 		this.canvas.width = this.params.canvasWidth;
 		this.canvas.height = this.params.canvasHeight;
@@ -257,6 +291,8 @@ cp.getDisplayData = function () {
 	displayData.push({name: "Contacts per day", value: (this.params.numParticles*this.params.speed*this.params.particleSize*City.TaktsPerDay/this.params.canvasWidth/this.params.canvasHeight).toFixed(2)});
 	if (this.params.hiddenFields.indexOf("responsibility") == -1)
 		displayData.push({name: "Responsibility", value: this.params.responsibility.toFixed(2)});
+	if (this.params.hiddenFields.indexOf("isolationTime") == -1 && this.params.hasOwnProperty("isolationTime"))
+		displayData.push({name: "Isolation time", value: this.params.isolationTime});
 	if (this.params.hiddenFields.indexOf("careCapacity") == -1)
 		displayData.push({name: "Start health care capacity", value: this.params.careCapacity});
 	if (this.params.hiddenFields.indexOf("careGrowthRate") == -1)
@@ -267,7 +303,6 @@ cp.getDisplayData = function () {
 
 cp.updateDisplayData = function () {
 	var displayData = this.getDisplayData();
-	console.log("updat display data", displayData);
 	for (var i = 0; i < displayData.length; i++) {
 		this.dataBlock.valueFields[i].innerHTML = displayData[i].value;
 	}
