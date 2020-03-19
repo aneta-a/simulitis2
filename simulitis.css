@@ -167,6 +167,10 @@ img#imgmail {
 	
 }
 
+.slider-group-description {
+	margin: 8px 0px 0px 6px;
+}
+
 .slider-value-number {
 	font-weight: bold;
 }
